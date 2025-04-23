@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Generator Diplome Personalizate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Georgia&family=Playfair+Display&family=Roboto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto Serif', serif;
+      background: #eef3f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #800000;
+    }
+    .controls {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .diploma {
+      width: 100%;
+      max-width: 1200px;
+      height: auto;
+      background: white;
+      border: 16px double goldenrod;
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 0 30px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      color: #000;
+    }
+    .diploma h1.title {
+      font-family: 'Times New Roman', serif;
+      font-size: 72px;
+      font-weight: bold;
+      color: #003399;
+      margin: 0;
+    }
+    .diploma-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      font-size: 32px;
+      margin: 20px 0;
+    }
+    .diploma-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .diploma-row input, .diploma-row select {
+      flex-grow: 1;
+      padding: 6px;
+      font-size: 22px;
+    }
+    .signature {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 60px;
+      font-size: 20px;
+    }
+    .signature input {
+      width: 250px;
+      border: none;
+      border-bottom: 2px solid #000;
+      text-align: center;
+      font-size: 18px;
+    }
+    button, label.button {
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: none;
+      background: gold;
+      color: #000;
+    }
+    button:hover, label.button:hover {
+      background: orange;
+    }
+    .logos {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .logos img {
+      height: 100px;
+      max-width: 200px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎓 Generator Diplome Personalizate</h1>
+  <div class="controls">
+    <label><input type="color" id="textColor" value="#003399"> Culoare Text</label>
+    <label for="imgUpload" class="button">📷 Adaugă Poză Fundal</label>
+    <input type="file" id="imgUpload" accept="image/*">
+    <label for="logoMinisterUpload" class="button">🏛️ Adaugă Sigla Minister</label>
+    <input type="file" id="logoMinisterUpload" accept="image/*" style="display:none">
+    <label for="logoScoalaUpload" class="button">🏫 Adaugă Sigla Școlii</label>
+    <input type="file" id="logoScoalaUpload" accept="image/*" style="display:none">
+    <button onclick="resetFields()">🔄 Resetare</button>
+    <button onclick="generatePDF()">📄 Exportă PDF</button>
+    <button onclick="window.print()">🖨️ Printează</button>
+  </div>
+  <div id="diploma" class="diploma">
+    <div class="logos">
+      <img id="logoMinister" src="" alt="Sigla Minister" style="object-fit: contain;">
+      <img id="logoScoala" src="" alt="Sigla Școala">
+    </div>
+    <h1 class="title">DIPLOMĂ</h1>
+    <div class="diploma-content">
+      <div class="diploma-row"><label>Se acordă pentru:</label> 
+        <select id="motivDiploma">
+          <option>Merit</option>
+          <option>Rezultate deosebite</option>
+          <option>Nota 10</option>
+          <option>Premiul I</option>
+          <option>Premiul II</option>
+          <option>Premiul III</option>
+          <option>Mențiune</option>
+          <option>Activități extracurriculare</option>
+          <option>Voluntariat</option>
+          <option value="altul">Altul...</option>
+        </select>
+        <input type="text" id="altMotiv" style="display:none" placeholder="Scrie motivul aici...">
+      </div>
+      <div class="diploma-row"><label>Se acordă elevului/ei:</label> <input type="text"></div>
+      <div class="diploma-row"><label>de la Școala Gimnazială:</label> <input type="text"></div>
+      <div class="diploma-row"><label>Clasa:</label> <input type="text"></div>
+      <div class="diploma-row"><label>Județul:</label> <input type="text"></div>
+      <div class="diploma-row"><label>Data:</label> <input type="text"></div>
+    </div>
+    <div class="signature">
+      <div>
+        Director:<br><input type="text">
+      </div>
+      <div>
+        Profesor:<br><input type="text">
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const textColorPicker = document.getElementById('textColor');
+    textColorPicker.addEventListener('input', () => {
+      document.getElementById('diploma').style.color = textColorPicker.value;
+      document.querySelector('.title').style.color = textColorPicker.value;
+    });
+
+    document.getElementById('imgUpload').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        document.getElementById('diploma').style.backgroundImage = `url(${event.target.result})`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('logoMinisterUpload').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        document.getElementById('logoMinister').src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('logoScoalaUpload').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        document.getElementById('logoScoala').src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('motivDiploma').addEventListener('change', function () {
+      const altInput = document.getElementById('altMotiv');
+      if (this.value === 'altul') {
+        altInput.style.display = 'block';
+      } else {
+        altInput.style.display = 'none';
+        altInput.value = '';
+      }
+    });
+
+    function resetFields() {
+      document.querySelectorAll('input[type=text]').forEach(input => input.value = '');
+      document.getElementById('diploma').style.backgroundImage = '';
+      textColorPicker.value = '#003399';
+      document.getElementById('diploma').style.color = '#003399';
+      document.querySelector('.title').style.color = '#003399';
+      document.getElementById('logoMinister').src = '';
+      document.getElementById('logoScoala').src = '';
+      document.getElementById('motivDiploma').value = 'Merit';
+      document.getElementById('altMotiv').style.display = 'none';
+      document.getElementById('altMotiv').value = '';
+    }
+
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const diploma = document.getElementById('diploma');
+      const canvas = await html2canvas(diploma);
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [canvas.width, canvas.height] });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save('diploma.pdf');
+    }
+  </script>
+</body>
+</html>
